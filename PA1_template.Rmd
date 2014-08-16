@@ -1,20 +1,90 @@
 # Reproducible Research: Peer Assessment 1
-
-
 ## Loading and preprocessing the data
+In the first step, we should load the data and drop missing values 
+(we assume that there is "activity.csv"
+in working directory):
 
+```{r, echo = TRUE}
+    library(lattice)
+    raw_data <- read.csv("activity.csv")
+    data <- raw_data[complete.cases(raw_data), ]
+    mean_per_interval <- tapply(data[["steps"]], data[["interval"]], mean)
+```
 
 
 ## What is mean total number of steps taken per day?
+Make a histogram of the total number of steps taken each day:
 
+```{r, echo=TRUE}
+hist(tapply(data[["steps"]], data$date, sum),  
+     xlab = "Total number of steps", 
+     main = "Histogram of number of steps")
+    
+```
 
+Let calculate mean and median values
+```{r, echo = TRUE}
+    tapply(data[["steps"]], data$date, mean)
+    tapply(data[["steps"]], data$date, median)
+```
 
 ## What is the average daily activity pattern?
-
-
+Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
+```{r, echo = TRUE}
+    plot(tapply(data[["steps"]], data[["interval"]], mean), type = "l")
+```
+Find a maximum
+```{r, echo=TRUE}
+    max(unlist(split(data[["steps"]], data[["interval"]])))
+```
 
 ## Imputing missing values
+Number of missing values:
+```{r, echo = TRUE}
+    len <- nrow(raw_data)
+    len - sum(complete.cases(raw_data))
+```
 
+Put in place of missing values mean of time interval:
+```{r, echo = TRUE}
+    update_data <- raw_data
+    for (i in 1 : length(update_data[["steps"]]))
+        if (is.na(update_data[i, "steps"]))
+            update_data[i, "steps"] <- 
+                    mean_per_interval[as.character(data[i, "interval"])]
+```
+
+There is a beginig of a new dataset:
+```{r, echo = TRUE}
+    head(update_data)
+```
+
+Make a new histogram
+```{r, echo=TRUE}
+hist(tapply(update_data[["steps"]], update_data$date, sum),  
+     xlab = "Total number of steps", 
+     main = "Histogram of number of steps")
+    
+```
+
+Let calculate mean and median values
+```{r, echo = TRUE}
+    tapply(update_data[["steps"]], update_data$date, mean)
+    tapply(update_data[["steps"]], update_data$date, median)
+```
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+```{r, echo = TRUE}
+    for (i in 1 : length(update_data$date))
+        update_data[i, "new_date"] <- 
+            (as.POSIXlt(update_data[i, "date"])$wday %% 6 == 0)
+
+    new_mean <- tapply(update_data[["steps"]], update_data$date, mean)
+    #class(new_mean)
+    #head(new_mean)
+    xyplot(new_mean ~ 1:length(new_mean) | update_data$new_date, 
+           type = "l")
+```
+
+
