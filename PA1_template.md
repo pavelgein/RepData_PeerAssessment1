@@ -216,14 +216,15 @@ Let calculate mean and median values
 
 ```r
     for (i in 1 : length(update_data$date))
-        update_data[i, "new_date"] <- 
-            (as.POSIXlt(update_data[i, "date"])$wday %% 6 == 0)
+        update_data[i, "new_date"] <- {
+            if (as.POSIXlt(update_data[i, "date"])$wday %% 6 == 0) {
+                "weekend"}
+            else
+                "weekday"}
+    data_for_plot <- aggregate(steps ~ interval + new_date , data = update_data, mean)
 
-    new_mean <- tapply(update_data[["steps"]], update_data$date, mean)
-    #class(new_mean)
-    #head(new_mean)
-    xyplot(new_mean ~ 1:length(new_mean) | update_data$new_date, 
-           type = "l")
+    xyplot(steps ~ interval | new_date, 
+           type = "l", data = data_for_plot)
 ```
 
 ![plot of chunk unnamed-chunk-11](figure/unnamed-chunk-11.png) 
